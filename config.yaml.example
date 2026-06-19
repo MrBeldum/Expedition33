@@ -1,0 +1,53 @@
+# Expedition33 configuration.
+# Values like ${ENV_VAR} are expanded from the environment at runtime.
+
+htb:
+  api_token: ${HTB_API_TOKEN}
+  base_url: https://app.hackthebox.com/api/v4
+  vpn_config_path: null
+  vpn_download_path: ./sessions/htb.ovpn
+
+llm:
+  provider: openai          # openai | anthropic | ollama
+  model: gpt-4o
+  api_key: ${OPENAI_API_KEY}
+  base_url: null            # DeepSeek/Ollama/OpenAI-compatible override
+  max_tokens: 1024
+  temperature: 0.2
+
+paths:
+  sessions_dir: ./sessions
+  writeups_dir: ./writeups
+  wordlist: /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+  seclists_dir: /usr/share/seclists
+  rockyou: /usr/share/wordlists/rockyou.txt
+  linpeas: /opt/PEASS-ng/linPEAS/linpeas.sh
+  winpeas: /opt/PEASS-ng/winPEAS/winPEASx64.exe
+
+timeouts:
+  nmap_initial: 300
+  nmap_full: 900
+  gobuster: 300
+  ffuf: 300
+  nikto: 300
+  searchsploit: 30
+  linpeas: 180
+  winpeas: 180
+  john: 300
+  hashcat: 300
+  hydra: 300
+  curl: 30
+  whatweb: 30
+  shell_default: 120
+
+planner:
+  max_iterations: 40
+  max_phase_attempts_without_progress: 5
+  manual_exploit_required_before_msf: true
+
+msf:
+  host: 127.0.0.1
+  port: 55552
+  username: msf
+  password: expedition33
+  ssl: false
