@@ -12,6 +12,10 @@ from pydantic import BaseModel, Field, field_validator
 _ENV_PATTERN = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}")
 
 
+class ConfigError(ValueError):
+    """Raised when config.yaml cannot be loaded or validated."""
+
+
 def _expand_env(value: Any) -> Any:
     if isinstance(value, str):
         def replace(match: re.Match[str]) -> str:
@@ -111,9 +115,13 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
     config_path = Path(path)
     data: dict[str, Any] = {}
     if config_path.exists():
-        raw = yaml.safe_load(config_path.read_text()) or {}
+        text = _normalize_config_text(config_path.read_text(encoding="utf-8"))
+        try:
+            raw = yaml.safe_load(text) or {}
+        except yaml.YAMLError as exc:
+            raise ConfigError(_format_yaml_error(config_path, text, exc)) from exc
         if not isinstance(raw, dict):
-            raise ValueError(f"Config file {config_path} must contain a YAML mapping")
+            raise ConfigError(f"Config file {config_path} must contain a YAML mapping")
         data = _expand_env(raw)
 
     config = AppConfig.model_validate(data)
@@ -127,3 +135,51 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
 
     config.ensure_directories()
     return config
+
+
+def _normalize_config_text(text: str) -> str:
+    """Accept common copy/paste forms without hiding real YAML errors."""
+    text = text.lstrip("\ufeff")
+    lines = text.splitlines()
+    first = next((index for index, line in enumerate(lines) if line.strip()), None)
+    if first is None:
+        return ""
+
+    if lines[first].strip().startswith("```"):
+        lines.pop(first)
+        for index in range(len(lines) - 1, -1, -1):
+            if lines[index].strip().startswith("```"):
+                lines.pop(index)
+                break
+
+    first = next((index for index, line in enumerate(lines) if line.strip()), None)
+    if first is not None and lines[first].strip().lower() == "yaml":
+        lines.pop(first)
+
+    return "\n".join(lines) + "\n"
+
+
+def _format_yaml_error(config_path: Path, text: str, exc: yaml.YAMLError) -> str:
+    mark = getattr(exc, "problem_mark", None)
+    problem = getattr(exc, "problem", None) or str(exc)
+    if mark is None:
+        return f"Failed to parse {config_path}: {problem}"
+
+    line_no = mark.line + 1
+    column_no = mark.column + 1
+    lines = text.splitlines()
+    start = max(1, line_no - 2)
+    end = min(len(lines), line_no + 2)
+    context = []
+    for current in range(start, end + 1):
+        prefix = ">" if current == line_no else " "
+        context.append(f"{prefix} {current:4}: {lines[current - 1]}")
+        if current == line_no:
+            context.append(f"       {' ' * mark.column}^")
+
+    return (
+        f"Failed to parse {config_path} at line {line_no}, column {column_no}: {problem}\n"
+        + "\n".join(context)
+        + "\nYAML is indentation-sensitive. Quote edited tokens/URLs if needed, or regenerate with: "
+        + "cp config.yaml.example config.yaml"
+    )

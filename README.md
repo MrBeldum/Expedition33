@@ -37,12 +37,12 @@ OpenAI example:
 
 ```yaml
 htb:
-  api_token: ${HTB_API_TOKEN}
+  api_token: "${HTB_API_TOKEN}"
 
 llm:
-  provider: openai
-  model: gpt-4o
-  api_key: ${OPENAI_API_KEY}
+  provider: "openai"
+  model: "gpt-4o"
+  api_key: "${OPENAI_API_KEY}"
   base_url: null
   max_tokens: 1024
   temperature: 0.2
@@ -52,29 +52,29 @@ DeepSeek or other OpenAI-compatible endpoint:
 
 ```yaml
 llm:
-  provider: openai
-  model: deepseek-chat
-  api_key: ${DEEPSEEK_API_KEY}
-  base_url: https://api.deepseek.com
+  provider: "openai"
+  model: "deepseek-chat"
+  api_key: "${DEEPSEEK_API_KEY}"
+  base_url: "https://api.deepseek.com"
 ```
 
 Ollama:
 
 ```yaml
 llm:
-  provider: ollama
-  model: llama3.1
-  api_key: ollama
-  base_url: http://localhost:11434/v1
+  provider: "ollama"
+  model: "llama3.1"
+  api_key: "ollama"
+  base_url: "http://localhost:11434/v1"
 ```
 
 Anthropic:
 
 ```yaml
 llm:
-  provider: anthropic
-  model: claude-3-5-sonnet-latest
-  api_key: ${ANTHROPIC_API_KEY}
+  provider: "anthropic"
+  model: "claude-3-5-sonnet-latest"
+  api_key: "${ANTHROPIC_API_KEY}"
 ```
 
 ## Usage
@@ -83,6 +83,18 @@ Start a machine:
 
 ```bash
 expedition33 start Planning
+```
+
+Start when you already know the target IP, bypassing HTB API machine lookup:
+
+```bash
+expedition33 start Planning 10.129.17.120
+```
+
+Start directly by IP:
+
+```bash
+expedition33 start 10.129.17.120
 ```
 
 Start with confirmation before every command:

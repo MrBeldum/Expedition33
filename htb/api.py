@@ -80,7 +80,9 @@ class HTBClient:
         destination.parent.mkdir(parents=True, exist_ok=True)
         response = self.session.get(f"{self.config.base_url.rstrip('/')}/connections/vpn", timeout=60)
         if response.status_code >= 400:
-            raise HTBAPIError(f"Failed to download VPN config: HTTP {response.status_code} {response.text[:200]}")
+            raise HTBAPIError(
+                f"Failed to download VPN config: HTTP {response.status_code} {_response_summary(response)}"
+            )
         destination.write_bytes(response.content)
         return destination
 
@@ -88,14 +90,30 @@ class HTBClient:
         url = f"{self.config.base_url.rstrip('/')}/{path.lstrip('/')}"
         response = self.session.request(method, url, timeout=60, **kwargs)
         if response.status_code >= 400:
-            raise HTBAPIError(f"HTB API {method} {path} failed: HTTP {response.status_code} {response.text[:300]}")
+            raise HTBAPIError(
+                f"HTB API {method} {path} failed: HTTP {response.status_code} {_response_summary(response)}"
+            )
         try:
             data = response.json()
         except ValueError as exc:
-            raise HTBAPIError(f"HTB API {method} {path} returned non-JSON") from exc
+            raise HTBAPIError(
+                f"HTB API {method} {path} returned non-JSON: {_response_summary(response)}"
+            ) from exc
         return data
 
     def _add_machine_host(self, machine: MachineInfo) -> None:
         if not self.hosts or not machine.ip:
             return
         self.hosts.add_host(machine.ip, f"{machine.name.lower()}.htb")
+
+
+def _response_summary(response: requests.Response) -> str:
+    content_type = response.headers.get("content-type", "unknown")
+    location = response.headers.get("location")
+    text = response.text.strip().replace("\n", " ").replace("\r", " ")
+    snippet = text[:300] if text else "<empty body>"
+    parts = [f"content-type={content_type!r}"]
+    if location:
+        parts.append(f"location={location!r}")
+    parts.append(f"body={snippet!r}")
+    return ", ".join(parts)
