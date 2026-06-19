@@ -22,7 +22,7 @@ Expedition33 is a terminal-based HackTheBox pentesting agent designed for Kali L
 
 ```bash
 cd ~/Expedition33
-python3.11 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
