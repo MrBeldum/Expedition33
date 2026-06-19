@@ -1,4 +1,4 @@
-# Expedition33 (WARNING!: THIS REPO IS NO LONGER MAINTAINED)
+# Expedition33 (WARNING: THIS PROJECT IS RETIRED!)
 
 Expedition33 is a terminal-based HackTheBox pentesting agent designed for Kali Linux or ParrotOS. It runs natively on the host VM, uses direct LLM API calls for planning, executes tools through sudo-backed wrappers, persists state in SQLite, and writes a running session log plus final writeup.
 
